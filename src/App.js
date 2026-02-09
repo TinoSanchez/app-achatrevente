@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './app.css';
+import Login from './Login';
 import { db, authAvailable, signInWithGoogle, signOutUser, onAuthChange, uploadImage } from './firebase';
 import { collection, addDoc, setDoc, doc, deleteDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Line, Bar } from 'react-chartjs-2';
 import { QRCodeSVG } from 'qrcode.react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
+import { onUserProductsChange, addProductForUser, updateProductForUser, deleteProductForUser, saveUserPreferences, getUserPreferences } from './productService';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -79,7 +81,21 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 function App() {
-  const [produits, setProduits] = useState(() => JSON.parse(localStorage.getItem('produits_v2')) || []);
+  // État d'authentification
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [loginError, setLoginError] = useState('');
+
+  // États des produits
+  const [produits, setProduits] = useState(() => {
+    // Charger depuis localStorage si pas d'authentification
+    if (!authAvailable) {
+      return JSON.parse(localStorage.getItem('produits_v2')) || [];
+    }
+    return [];
+  });
+
+  // États des préférences utilisateur
   const [monthlyGoal, setMonthlyGoal] = useState(() => parseFloat(localStorage.getItem('monthly_goal')) || 500);
   const [expenses, setExpenses] = useState(() => JSON.parse(localStorage.getItem('expenses')) || []);
   const [activeTab, setActiveTab] = useState('products');
@@ -113,12 +129,91 @@ function App() {
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const fileInputRef = useRef(null);
-  const [user, setUser] = useState(null);
   const [showAll, setShowAll] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === '1');
   const [scannerActive, setScannerActive] = useState(false);
   const videoRef = useRef(null);
   const [scanMessage, setScanMessage] = useState('');
+
+  // Gérer l'authentification Firebase
+  useEffect(() => {
+    if (!authAvailable) {
+      // Si Firebase n'est pas configuré, charger le mode offline
+      setAuthLoading(false);
+      setUser(null);
+      return;
+    }
+
+    const unsub = onAuthChange(firebaseUser => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName || firebaseUser.email,
+          photoURL: firebaseUser.photoURL,
+          isAnonymous: firebaseUser.isAnonymous
+        });
+        
+        // Charger les produits depuis Firestore
+        const unsubProducts = onUserProductsChange(firebaseUser.uid, (products) => {
+          setProduits(products);
+        });
+        
+        // Charger les préférences utilisateur
+        getUserPreferences(firebaseUser.uid).then(prefs => {
+          if (prefs.monthlyGoal) setMonthlyGoal(prefs.monthlyGoal);
+          if (prefs.expenses) setExpenses(prefs.expenses);
+          if (prefs.fournisseurs) setFournisseurs(prefs.fournisseurs);
+          if (prefs.darkMode !== undefined) setDarkMode(prefs.darkMode);
+        });
+
+        setAuthLoading(false);
+        return unsubProducts;
+      } else {
+        // Utilisateur déconnecté
+        setUser(null);
+        setProduits([]);
+        setAuthLoading(false);
+      }
+    });
+
+    return () => unsub();
+  }, []);
+
+  // Sauvegarder les préférences utilisateur quand elles changent
+  useEffect(() => {
+    if (!user || !user.uid) return;
+    
+    const savePreferences = async () => {
+      await saveUserPreferences(user.uid, {
+        monthlyGoal,
+        expenses,
+        fournisseurs,
+        darkMode,
+        theme_color: selectedThemeColor
+      });
+    };
+
+    const timer = setTimeout(savePreferences, 1000);
+    return () => clearTimeout(timer);
+  }, [monthlyGoal, expenses, fournisseurs, darkMode, selectedThemeColor, user]);
+
+  // Gérer la déconnexion
+  const handleLogout = async () => {
+    if (!user) return;
+    
+    try {
+      if (authAvailable && !user.isAnonymous) {
+        await signOutUser();
+      }
+      setUser(null);
+      setProduits([]);
+      resetForm();
+    } catch (error) {
+      setLoginError('Erreur lors de la déconnexion');
+      console.error('Logout error:', error);
+    }
+  };
 
   // Vérifier si un produit est demandé via URL (QR scanné)
   useEffect(() => {
@@ -128,11 +223,94 @@ function App() {
       const product = produits.find(p => p.id === productId);
       if (product) {
         setShowProductDetail(productId);
-        // Nettoyer l'URL après l'avoir traitée
         window.history.replaceState(null, '', window.location.pathname);
       }
     }
   }, [produits]);
+
+  // Subscribe to Firestore user products when authenticated
+  useEffect(() => {
+    if (!authAvailable || !user) return;
+    try {
+      const colRef = collection(db, 'users', user.uid, 'produits');
+      const q = query(colRef, orderBy('nom', 'asc'));
+      const unsub = onSnapshot(q, snapshot => {
+        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        setProduits(items);
+      }, err => {
+        console.warn('Firestore snapshot error', err);
+      });
+      return () => unsub();
+    } catch (e) { console.warn('Failed to subscribe to firestore', e); }
+  }, [user]);
+
+  // Load localStorage produits
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('produits_v2');
+      if (raw) setProduits(JSON.parse(raw));
+    } catch (e) { console.warn(e); }
+  }, []);
+
+  // SKU settings load
+  useEffect(() => {
+    try {
+      const p = localStorage.getItem('sku_prefix');
+      const c = localStorage.getItem('sku_counter');
+      if (p) setSkuPrefix(p);
+      if (c) setSkuCounter(Number(c));
+    } catch (e) { console.warn(e); }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('produits_v2', JSON.stringify(produits));
+  }, [produits]);
+
+  useEffect(() => {
+    localStorage.setItem('dark_mode', darkMode ? '1' : '0');
+    document.body.classList.toggle('dark', darkMode);
+  }, [darkMode]);
+
+  useEffect(() => { localStorage.setItem('sku_prefix', skuPrefix); }, [skuPrefix]);
+  useEffect(() => { localStorage.setItem('sku_counter', String(skuCounter)); }, [skuCounter]);
+
+  useEffect(() => { setPage(1); }, [search, filterCategory, pageSize]);
+
+  // Gérer la connexion réussie
+  const handleLoginSuccess = async (firebaseUser) => {
+    if (!firebaseUser) {
+      // Mode offline/démo
+      setUser({ uid: 'local', email: 'demo@local', displayName: 'Utilisateur local', isLocal: true });
+      // Charger les données du localStorage
+      try {
+        const localProduits = JSON.parse(localStorage.getItem('produits_v2')) || [];
+        setProduits(localProduits);
+      } catch (e) {
+        console.warn('Error loading local products:', e);
+      }
+    } else {
+      setUser({
+        uid: firebaseUser.uid,
+        email: firebaseUser.email,
+        displayName: firebaseUser.displayName || firebaseUser.email,
+        photoURL: firebaseUser.photoURL,
+        isAnonymous: firebaseUser.isAnonymous
+      });
+    }
+  };
+
+  // Afficher la page de login si pas authentifié
+  if (authLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+        <div>Chargement...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
 
   // Générer l'URL correcte pour les QR codes
   const getQRUrl = (productId) => {
@@ -194,70 +372,6 @@ function App() {
       videoRef.current.srcObject = null;
     }
   };
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('produits_v2');
-      if (raw) setProduits(JSON.parse(raw));
-    } catch (e) { console.warn(e); }
-  }, []);
-
-  // Subscribe to Firestore user products when authenticated
-  useEffect(() => {
-    if (!authAvailable || !user) return;
-    try {
-      const colRef = collection(db, 'users', user.uid, 'produits');
-      const q = query(colRef, orderBy('nom', 'asc'));
-      const unsub = onSnapshot(q, snapshot => {
-        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        setProduits(items);
-      }, err => {
-        console.warn('Firestore snapshot error', err);
-      });
-      return () => unsub();
-    } catch (e) { console.warn('Failed to subscribe to firestore', e); }
-  }, [user]);
-
-  // Auth subscription (if Firebase configured)
-  useEffect(() => {
-    if (!authAvailable) {
-      // load local profile if any
-      try {
-        const p = localStorage.getItem('local_profile');
-        if (p) setUser(JSON.parse(p));
-      } catch (e) { /* ignore */ }
-      return;
-    }
-    const unsub = onAuthChange(u => {
-      if (u) setUser({ uid: u.uid, name: u.displayName, email: u.email, photoURL: u.photoURL });
-      else setUser(null);
-    });
-    return () => unsub();
-  }, []);
-
-  // SKU settings load
-  useEffect(() => {
-    try {
-      const p = localStorage.getItem('sku_prefix');
-      const c = localStorage.getItem('sku_counter');
-      if (p) setSkuPrefix(p);
-      if (c) setSkuCounter(Number(c));
-    } catch (e) { console.warn(e); }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('produits_v2', JSON.stringify(produits));
-  }, [produits]);
-
-  useEffect(() => {
-    localStorage.setItem('dark_mode', darkMode ? '1' : '0');
-    document.body.classList.toggle('dark', darkMode);
-  }, [darkMode]);
-
-  useEffect(() => { localStorage.setItem('sku_prefix', skuPrefix); }, [skuPrefix]);
-  useEffect(() => { localStorage.setItem('sku_counter', String(skuCounter)); }, [skuCounter]);
-
-  useEffect(() => { setPage(1); }, [search, filterCategory, pageSize]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -695,7 +809,27 @@ function App() {
 
   return (
     <div className="App">
-      <h1>📦 FKApp</h1>
+      {/* Header with User Profile */}
+      <div className="app-header">
+        <div className="header-left">
+          <h1>📦 App Achat Revente</h1>
+        </div>
+        <div className="header-right">
+          {user && (
+            <div className="user-profile">
+              {user.photoURL && <img src={user.photoURL} alt="Avatar" className="user-avatar" />}
+              <div className="user-info">
+                <span className="user-name">{user.displayName || user.email}</span>
+                {user.isLocal && <span className="mode-badge">Mode Offline</span>}
+              </div>
+              <button onClick={handleLogout} className="btn-logout">
+                <span>🚪</span> Déconnexion
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <p style={{textAlign: 'center', color: 'var(--muted)', marginTop: '-15px', marginBottom: '20px', fontSize: '14px'}}>
         Gestion simple et intuitive de vos achats et reventes
       </p>
