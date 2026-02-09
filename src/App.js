@@ -141,9 +141,10 @@ function App() {
   // Gérer l'authentification Firebase
   useEffect(() => {
     if (!authAvailable) {
-      // Si Firebase n'est pas configuré, charger le mode offline
+      // Si Firebase n'est pas configuré, afficher toujours le Login
       setAuthLoading(false);
       setUser(null);
+      localStorage.removeItem('local_app_session');
       return;
     }
 
