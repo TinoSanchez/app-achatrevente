@@ -1824,6 +1824,7 @@ function App() {
         <div>Total profit: € {produits.filter(p => p.statut === 'Vendu').reduce((acc,p)=>acc + calculateProfit(p).netProfit,0).toFixed(2)}</div>
       </div>
     </div>
+    </>
   );
 }
 

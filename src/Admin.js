@@ -48,59 +48,6 @@ export default function Admin({ user, onBack }) {
     } catch (error) {
       setError('Impossible de charger les données Firestore. Vérifiez votre connexion ou vos droits.');
       setUsers([]);
-      return (
-        <div className="admin-container">
-          <div className="admin-header">
-            <h2>👨‍💼 Administration</h2>
-            <button onClick={onBack} className="btn">Retour</button>
-            <button onClick={()=>setTheme(theme==='dark'?'light':'dark')} style={{background:theme==='dark'?'#22223b':'#fff',color:theme==='dark'?'#fff':'#222',border:'1.5px solid var(--muted)',borderRadius:'8px',padding:'8px 18px',fontWeight:'bold',boxShadow:'0 2px 8px 0 rgba(0,0,0,0.08)',cursor:'pointer',marginLeft:'18px'}}>
-              {theme==='dark'? '☀️ Thème clair' : '🌙 Thème sombre'}
-            </button>
-          </div>
-          {loading ? (
-            <div style={{textAlign:'center',margin:'48px 0',fontSize:'1.2rem'}}>Chargement...</div>
-          ) : error ? (
-            <div className="error" style={{margin:'48px 0',fontSize:'1.1rem'}}>{error}</div>
-          ) : (
-            <>
-              <div style={{marginBottom:'40px',display:'flex',gap:'32px',alignItems:'center'}}>
-                <input
-                  type="text"
-                  placeholder="Recherche utilisateur (email)"
-                  value={searchUser}
-                  onChange={e=>setSearchUser(e.target.value)}
-                  style={{maxWidth:'340px',padding:'16px',borderRadius:'10px',fontSize:'1.08rem'}}
-                />
-                <button onClick={loadAllUsers} className="btn">🔄 Actualiser</button>
-              </div>
-              <div className="users-grid">
-                {users.filter(u=>!searchUser||u.email.toLowerCase().includes(searchUser.toLowerCase())).map(u=>(
-                  <div key={u.id} style={{background:'var(--card)',borderRadius:'18px',boxShadow:'var(--shadow)',padding:'36px 28px',marginBottom:'24px',display:'flex',flexDirection:'column',gap:'18px'}}>
-                    <div style={{fontWeight:'bold',fontSize:'1.18rem',color:'var(--primary-dark)'}}>{u.email}</div>
-                    <div style={{color:'var(--muted)',fontSize:'1.05rem'}}>Nom: {u.displayName||u.nom||'—'}</div>
-                    <div style={{color:'var(--muted)',fontSize:'1.05rem'}}>Role: {u.role||'user'}</div>
-                    <button onClick={()=>deleteUser(u.id)} style={{background:'var(--danger)',color:'#fff',border:'none',borderRadius:'10px',padding:'12px 22px',fontWeight:'bold',marginTop:'12px',fontSize:'1.05rem'}}>Supprimer utilisateur</button>
-                  </div>
-                ))}
-              </div>
-              <h3 style={{margin:'48px 0 24px 0'}}>Tous les produits</h3>
-              <div className="products-list">
-                {allProducts.map(p=>(
-                  <div key={p.id} style={{background:'var(--card)',borderRadius:'18px',boxShadow:'var(--shadow)',padding:'32px 24px',marginBottom:'22px',display:'flex',flexDirection:'column',gap:'14px'}}>
-                    <div style={{fontWeight:'bold',fontSize:'1.15rem',color:'var(--primary-dark)'}}>{p.nom}</div>
-                    <div style={{color:'var(--muted)',fontSize:'1.05rem'}}>SKU: {p.sku||'—'} | Catégorie: {p.categorie||'—'} | Statut: {p.statut||'—'}</div>
-                    <div style={{color:'var(--muted)',fontSize:'1.05rem'}}>Utilisateur: {p.userEmail||'—'}</div>
-                    <button onClick={()=>deleteProduct(p.userId,p.id)} style={{background:'var(--danger)',color:'#fff',border:'none',borderRadius:'10px',padding:'12px 22px',fontWeight:'bold',marginTop:'12px',fontSize:'1.05rem'}}>Supprimer produit</button>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      );
-      await loadAllUsers();
-    } catch (error) {
-      console.error('Erreur:', error);
     }
   };
 
@@ -113,6 +60,46 @@ export default function Admin({ user, onBack }) {
       await loadAllUsers();
     } catch (error) {
       console.error('Erreur:', error);
+    }
+  };
+  const makeAdmin = async (userId) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: 'admin'
+      });
+      alert('✅ Utilisateur promu admin');
+      await loadAllUsers();
+    } catch (error) {
+      console.error('Erreur:', error);
+    }
+  };
+  const deleteUser = async (userId) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur et TOUS ses produits?')) return;
+    try {
+      // Supprimer tous les produits de l'utilisateur
+      const productsRef = collection(db, 'users', userId, 'produits');
+      const productsSnapshot = await getDocs(productsRef);
+      for (const prodDoc of productsSnapshot.docs) {
+        await deleteDoc(prodDoc.ref);
+      }
+      // Supprimer le document utilisateur
+      await deleteDoc(doc(db, 'users', userId));
+      alert('✅ Utilisateur supprimé avec succès');
+      await loadAllUsers();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+  const deleteProduct = async (userId, productId) => {
+    if (!window.confirm('Supprimer ce produit?')) return;
+    try {
+      await deleteDoc(doc(db, 'users', userId, 'produits', productId));
+      alert('✅ Produit supprimé');
+      await loadAllUsers();
+    } catch (error) {
+      console.error('Erreur lors de la suppression du produit:', error);
+      alert('Erreur lors de la suppression du produit');
     }
   };
 
