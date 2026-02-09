@@ -3,15 +3,15 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
-// Configuration Firebase - Credentials officiels
+// Configuration Firebase - via variables d'environnement (REACT_APP_*)
 const firebaseConfig = {
-  apiKey: "AIzaSyCkP0F9Si4gq-yiBsd30nxngrUHznJCJKM",
-  authDomain: "appachatrevente.firebaseapp.com",
-  projectId: "appachatrevente",
-  storageBucket: "appachatrevente.firebasestorage.app",
-  messagingSenderId: "227840779045",
-  appId: "1:227840779045:web:55a92a581214e72d90f0cc",
-  measurementId: "G-VBY1C2CC9R"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 let app = null;
@@ -27,9 +27,17 @@ try {
     storage = getStorage(app);
     auth = getAuth(app);
     authAvailable = true;
+    console.log('✅ Firebase initialized successfully');
+  } else {
+    console.warn('⚠️ Firebase config missing or invalid');
   }
 } catch (e) {
-  console.warn('Firebase init failed:', e);
+  console.error('❌ Firebase initialization failed:', {
+    message: e.message,
+    code: e.code,
+    details: e.toString()
+  });
+  console.log('Falling back to offline mode (localStorage)');
 }
 
 const provider = authAvailable ? new GoogleAuthProvider() : null;
