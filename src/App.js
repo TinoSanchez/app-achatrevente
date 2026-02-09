@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './app.css';
 import Login from './Login';
+import Admin from './Admin';
 import { db, authAvailable, signInWithGoogle, signOutUser, onAuthChange, uploadImage } from './firebase';
 import { collection, addDoc, setDoc, doc, deleteDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Line, Bar } from 'react-chartjs-2';
@@ -134,6 +135,8 @@ function App() {
   const [scannerActive, setScannerActive] = useState(false);
   const videoRef = useRef(null);
   const [scanMessage, setScanMessage] = useState('');
+  const [userRole, setUserRole] = useState('user');
+  const [showAdmin, setShowAdmin] = useState(false);
 
   // Gérer l'authentification Firebase
   useEffect(() => {
@@ -179,6 +182,32 @@ function App() {
 
     return () => unsub();
   }, []);
+
+  // Charger le rôle utilisateur depuis Firestore
+  useEffect(() => {
+    if (!authAvailable || !user) {
+      setUserRole('user');
+      return;
+    }
+
+    const loadRole = async () => {
+      try {
+        const { getDoc } = await import('firebase/firestore');
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists() && userSnap.data().role === 'admin') {
+          setUserRole('admin');
+        } else {
+          setUserRole('user');
+        }
+      } catch (error) {
+        console.warn('Erreur lors de la récupération du rôle:', error);
+        setUserRole('user');
+      }
+    };
+
+    loadRole();
+  }, [user]);
 
   // Sauvegarder les préférences utilisateur quand elles changent
   useEffect(() => {
@@ -807,6 +836,11 @@ function App() {
 
   const categories = Array.from(new Set(produits.map(p => p.categorie).filter(Boolean)));
 
+  // Afficher le panneau d'administration si l'utilisateur est admin et demande l'accès
+  if (showAdmin && userRole === 'admin') {
+    return <Admin user={user} onBack={() => setShowAdmin(false)} />;
+  }
+
   return (
     <div className="App">
       {/* Header with User Profile */}
@@ -821,7 +855,13 @@ function App() {
               <div className="user-info">
                 <span className="user-name">{user.displayName || user.email}</span>
                 {user.isLocal && <span className="mode-badge">Mode Offline</span>}
+                {userRole === 'admin' && <span className="mode-badge" style={{backgroundColor: '#ff9800'}}>👨‍💼 ADMIN</span>}
               </div>
+              {userRole === 'admin' && (
+                <button onClick={() => setShowAdmin(true)} style={{marginRight: '10px', padding: '8px 15px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
+                  👨‍💼 Admin
+                </button>
+              )}
               <button onClick={handleLogout} className="btn-logout">
                 <span>🚪</span> Déconnexion
               </button>
