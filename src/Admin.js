@@ -9,7 +9,7 @@ export default function Admin({ user, onBack }) {
   const [loading, setLoading] = useState(true);
   const [searchUser, setSearchUser] = useState('');
   const [error, setError] = useState(null);
-  const [theme, setTheme] = useState(() => document.body.classList.contains('theme-dark') ? 'dark' : 'light');
+  // Removed unused theme and setTheme
 
   useEffect(() => {
     loadAllUsers();
