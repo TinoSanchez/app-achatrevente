@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Particles from 'react-tsparticles';
+import { Parallax } from 'react-parallax';
 import './modern.css';
 import Login from './Login';
 import Admin from './Admin';
@@ -82,6 +84,53 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 function App() {
+    // Chart data for monthly revenue
+    const getMonthlyChartData = () => {
+      // Regroupe les profits par mois (YYYY-MM)
+      const profitsByMonth = {};
+      produits.forEach(p => {
+        if (p.statut === 'Vendu' && p.dateVente) {
+          const month = p.dateVente.slice(0, 7); // YYYY-MM
+          const profit = calculateProfit(p).netProfit;
+          if (!profitsByMonth[month]) profitsByMonth[month] = 0;
+          profitsByMonth[month] += profit;
+        }
+      });
+      // Trie les mois par ordre chronologique
+      const months = Object.keys(profitsByMonth).sort();
+      return {
+        labels: months,
+        datasets: [
+          {
+            label: 'Profit net mensuel',
+            data: months.map(m => profitsByMonth[m]),
+            backgroundColor: 'rgba(76,175,80,0.3)',
+            borderColor: '#4caf50',
+            borderWidth: 2
+          }
+        ]
+      };
+    };
+  // Particles config
+  const particlesOptions = {
+    background: { color: { value: 'transparent' } },
+    fpsLimit: 60,
+    interactivity: {
+      events: { onClick: { enable: true, mode: 'push' }, onHover: { enable: true, mode: 'repulse' }, resize: true },
+      modes: { push: { quantity: 4 }, repulse: { distance: 120, duration: 0.4 } }
+    },
+    particles: {
+      color: { value: '#0f62fe' },
+      links: { color: '#0f62fe', distance: 180, enable: true, opacity: 0.3, width: 1.2 },
+      collisions: { enable: false },
+      move: { direction: 'none', enable: true, outModes: { default: 'bounce' }, random: false, speed: 1.2, straight: false },
+      number: { density: { enable: true, area: 900 }, value: 60 },
+      opacity: { value: 0.5 },
+      shape: { type: 'circle' },
+      size: { value: { min: 1, max: 5 } }
+    },
+    detectRetina: true
+  };
   // État d'authentification
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -452,6 +501,7 @@ function App() {
   };
 
   // Chart data for revenue
+
   const getChartData = () => {
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
@@ -467,34 +517,16 @@ function App() {
     });
     return {
       labels: last7Days,
-      datasets: [{
-        label: 'Profit (€)',
-        data: revenueByDay,
-        borderColor: '#0f62fe',
-        backgroundColor: 'rgba(15, 98, 254, 0.1)',
-        tension: 0.4
-      }]
-    };
-  };
-
-  const getMonthlyChartData = () => {
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-    const revenueByMonth = months.map((_, idx) => {
-      const monthNum = (idx + 1).toString().padStart(2, '0');
-      const monthProfit = produits
-        .filter(p => p.statut === 'Vendu' && p.dateVente && p.dateVente.includes(monthNum))
-        .reduce((a, p) => a + calculateProfit(p).netProfit, 0);
-      return monthProfit;
-    });
-    return {
-      labels: months,
-      datasets: [{
-        label: 'Profit Mensuel (€)',
-        data: revenueByMonth,
-        backgroundColor: 'rgba(15, 98, 254, 0.6)',
-        borderColor: '#0f62fe',
-        borderWidth: 1
-      }]
+      datasets: [
+        {
+          label: 'Profit net',
+          data: revenueByDay,
+          fill: true,
+          backgroundColor: 'rgba(15,98,254,0.2)',
+          borderColor: '#0f62fe',
+          tension: 0.4
+        }
+      ]
     };
   };
 

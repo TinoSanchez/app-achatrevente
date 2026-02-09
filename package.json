@@ -9,7 +9,10 @@
     "react": "^19.2.4",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.2.4",
+    "react-parallax": "^3.5.2",
     "react-scripts": "^5.0.1",
+    "react-tsparticles": "^2.12.2",
+    "tsparticles": "^3.9.1",
     "web-vitals": "^5.1.0"
   },
   "main": "public/electron.js",
