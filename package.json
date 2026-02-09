@@ -24,6 +24,7 @@
     "eject": "react-scripts eject",
     "electron": "electron .",
     "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron-dev-fast": "node start-dev.js",
     "electron-build": "npm run build && electron-builder",
     "electron-dist": "npm run build && electron-builder -c.extraMetadata.main=public/electron.js"
   },

@@ -93,7 +93,7 @@ function App() {
   const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('wallpaper') || '');
 
   // Theme logic
-  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || (darkMode ? 'dark' : 'light'));
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || (localStorage.getItem('dark_mode') === '1' ? 'dark' : 'light'));
   useEffect(() => {
     document.body.classList.toggle('theme-dark', theme === 'dark');
     localStorage.setItem('theme', theme);
@@ -871,351 +871,118 @@ function App() {
 
   return (
     <>
-      {wallpaper && <div className="bg-wallpaper" style={{backgroundImage: `url('${wallpaper}')`}}></div>}
       <div className="App">
-        {/* Header with User Profile and theme/wallpaper controls */}
+        {/* Clean Minimal Header */}
         <div className="app-header">
-          <div className="header-left">
-            <h1>📦 App Achat Revente</h1>
-          </div>
-          <div className="header-right">
-            <div style={{display:'flex',alignItems:'center',gap:'18px'}}>
-              <button onClick={()=>setTheme(theme==='dark'?'light':'dark')} style={{background:theme==='dark'?'#22223b':'#fff',color:theme==='dark'?'#fff':'#222',border:'1.5px solid var(--muted)',borderRadius:'8px',padding:'8px 18px',fontWeight:'bold',boxShadow:'0 2px 8px 0 rgba(0,0,0,0.08)',cursor:'pointer'}}>
-                {theme==='dark'? '☀️ Thème clair' : '🌙 Thème sombre'}
+          <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', paddingLeft: '40px', paddingRight: '40px', position: 'relative'}}>
+            <h1 style={{margin: 0, fontSize: '28px', position: 'absolute', left: '50%', transform: 'translateX(-50%)'}}>📦 Achat Revente</h1>
+            <div style={{display: 'flex', gap: '12px', alignItems: 'center', marginLeft: 'auto'}}>
+              {user && <div style={{fontSize: '14px', color: 'var(--text-secondary)'}}>{user.displayName || user.email}</div>}
+              <button onClick={handleLogout} className="btn-logout" style={{padding: '8px 16px', backgroundColor: 'var(--primary)', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '600'}}>
+                🚪 Déconnexion
               </button>
-              <select value={wallpaper} onChange={e=>setWallpaper(e.target.value)} style={{border:'1.5px solid var(--muted)',borderRadius:'8px',padding:'8px 18px',fontWeight:'bold',background:'#fff',color:'#222',boxShadow:'0 2px 8px 0 rgba(0,0,0,0.08)',cursor:'pointer'}}>
-                <option value="">Fond d'écran (aucun)</option>
-                <option value={wallpapers[1]}>Nature 1</option>
-                <option value={wallpapers[2]}>Nature 2</option>
-                <option value={wallpapers[3]}>Nature 3</option>
-                <option value={wallpapers[4]}>Nature 4</option>
-              </select>
             </div>
-            {user && (
-              <div className="user-profile">
-                {user.photoURL && <img src={user.photoURL} alt="Avatar" className="user-avatar" />}
-                <div className="user-info">
-                  <span className="user-name">{user.displayName || user.email}</span>
-                  {user.isLocal && <span className="mode-badge">Mode Offline</span>}
-                  {userRole === 'admin' && <span className="mode-badge" style={{backgroundColor: '#ff9800'}}>👨‍💼 ADMIN</span>}
-                </div>
-                {userRole === 'admin' && (
-                  <button onClick={() => setShowAdmin(true)} style={{marginRight: '10px', padding: '8px 15px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
-                    👨‍💼 Admin
-                  </button>
-                )}
-                <button onClick={handleLogout} className="btn-logout">
-                  <span>🚪</span> Déconnexion
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
-      <p style={{textAlign: 'center', color: 'var(--muted)', marginTop: '-15px', marginBottom: '20px', fontSize: '14px'}}>
-        Gestion simple et intuitive de vos achats et reventes
-      </p>
+        <p style={{textAlign: 'center', color: 'var(--text-secondary)', margin: 'var(--space-4) 40px', fontSize: '14px'}}>
+          Gestion simple et intuitive de vos achats et reventes
+        </p>
 
-      <div className="tabs-nav">
-        <button className={`tab-btn ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')}>
-          <span className="tab-icon">📦</span> Mes produits
-        </button>
-        <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
-          <span className="tab-icon">📊</span> Vue d'ensemble
-        </button>
-        <button className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`} onClick={() => setActiveTab('sales')}>
-          <span className="tab-icon">💰</span> Ventes
-        </button>
-        <button className={`tab-btn ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>
-          <span className="tab-icon">💳</span> Dépenses
-        </button>
-        <button className={`tab-btn ${activeTab === 'suppliers' ? 'active' : ''}`} onClick={() => setActiveTab('suppliers')}>
-          <span className="tab-icon">🏭</span> Fournisseurs
-        </button>
-        <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
-          <span className="tab-icon">⚙️</span> Paramètres
-        </button>
-      </div>
+        {/* Clean Tab Navigation */}
+        <div className="tabs-nav">
+          <button className={`tab-btn ${activeTab === 'products' ? 'active' : ''}`} onClick={() => setActiveTab('products')}>
+            <span>📦</span> Produits
+          </button>
+          <button className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
+            <span>📊</span> Tableau de bord
+          </button>
+          <button className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`} onClick={() => setActiveTab('sales')}>
+            <span>💰</span> Ventes
+          </button>
+          <button className={`tab-btn ${activeTab === 'expenses' ? 'active' : ''}`} onClick={() => setActiveTab('expenses')}>
+            <span>💳</span> Dépenses
+          </button>
+          <button className={`tab-btn ${activeTab === 'suppliers' ? 'active' : ''}`} onClick={() => setActiveTab('suppliers')}>
+            <span>🏭</span> Fournisseurs
+          </button>
+          <button className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')}>
+            <span>⚙️</span> Paramètres
+          </button>
+        </div>
 
+        {/* Main Content */}
+        <div className="app-main">
+          <div className="app-container">
+
+      {/* Products Tab - Simplified */}
       {activeTab === 'products' && (
-      <div className="tab-content">
-      <form onSubmit={saveProduit} aria-label="Formulaire produit" className="simple-form">
+      <div>
+      <form onSubmit={saveProduit} className="simple-form">
         <div className="form-section">
-          <h3>📋 Informations du produit</h3>
+          <h3>📦 Ajouter un produit</h3>
           
-          {/* ISBN/EAN Lookup */}
-          <div style={{marginBottom: '15px', padding: '10px', backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: '6px'}}>
-            <h4 style={{margin: '0 0 10px 0', fontSize: '14px'}}>📚 Rechercher par ISBN/EAN (OpenLibrary)</h4>
-            <div style={{display: 'flex', gap: '8px'}}>
-              <input id="isbnInput" type="text" placeholder="Entrez un ISBN (ex: 9782954567359)" style={{flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid var(--muted)'}} />
-              <button type="button" onClick={async () => {
-                const isbnInput = document.getElementById('isbnInput');
-                const isbn = isbnInput.value.trim();
-                if (!isbn) { alert('Entrez un ISBN'); return; }
-                const result = await searchISBN(isbn);
-                if (result) {
-                  setForm(prev => ({
-                    ...prev,
-                    nom: result.nom || prev.nom,
-                    description: result.description || prev.description,
-                    imageUrl: result.imageUrl || prev.imageUrl
-                  }));
-                  isbnInput.value = '';
-                  alert('✅ Livre trouvé! Les infos ont été remplies.');
-                } else {
-                  alert('❌ Aucun livre trouvé pour cet ISBN.');
-                }
-              }} style={{padding: '8px 15px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
-                🔍 Chercher
-              </button>
-            </div>
-          </div>
-
-          <input name="nom" value={form.nom} onChange={handleChange} placeholder="Nom du produit (ex: iPhone 13)" aria-label="Nom du produit" />
+          <input name="nom" value={form.nom} onChange={handleChange} placeholder="Nom du produit" required />
           {errors.nom && <div className="error">{errors.nom}</div>}
 
-          <div className="sku-row">
-            <input name="sku" value={form.sku} onChange={handleChange} placeholder="Référence/SKU (optionnel)" aria-label="SKU" />
-            <button type="button" className="small" onClick={generateSKU} title="Générer une référence">Auto</button>
-          </div>
-
-          <input name="categorie" value={form.categorie} onChange={handleChange} placeholder="Catégorie (ex: Électronique)" aria-label="Catégorie" list="cats" />
-          <datalist id="cats">{categories.map(c => <option key={c} value={c} />)}</datalist>
-
-          <textarea name="description" value={form.description} onChange={handleChange} placeholder="Description courte du produit" rows={2} aria-label="Description" />
-        </div>
-
-        <div className="form-section">
-          <h3>💰 Achat et vente</h3>
           <div className="form-row-2">
             <div>
               <label>Prix d'achat (€)</label>
-              <input name="prixAchat" type="number" step="0.01" value={form.prixAchat} onChange={handleChange} placeholder="0.00" aria-label="Prix d'achat" />
+              <input name="prixAchat" type="number" step="0.01" value={form.prixAchat} onChange={handleChange} placeholder="0.00" required />
               {errors.prixAchat && <div className="error">{errors.prixAchat}</div>}
             </div>
             <div>
               <label>Prix de vente (€)</label>
-              <input name="prixVente" type="number" step="0.01" value={form.prixVente} onChange={handleChange} placeholder="0.00" aria-label="Prix de vente" />
+              <input name="prixVente" type="number" step="0.01" value={form.prixVente} onChange={handleChange} placeholder="0.00" required />
               {errors.prixVente && <div className="error">{errors.prixVente}</div>}
+            </div>
+            <div>
+              <label>Quantité</label>
+              <input name="quantite" type="number" value={form.quantite} onChange={handleChange} placeholder="1" required />
+              {errors.quantite && <div className="error">{errors.quantite}</div>}
             </div>
           </div>
 
           <div className="form-row-2">
             <div>
-              <label>Quantité</label>
-              <input name="quantite" type="number" value={form.quantite} onChange={handleChange} placeholder="1" aria-label="Quantité" />
-              {errors.quantite && <div className="error">{errors.quantite}</div>}
+              <label>Catégorie</label>
+              <input name="categorie" value={form.categorie} onChange={handleChange} placeholder="Ex: Électronique" list="cats" />
+              <datalist id="cats">{categories.map(c => <option key={c} value={c} />)}</datalist>
             </div>
             <div>
               <label>Statut</label>
-              <select name="statut" value={form.statut} onChange={handleChange} aria-label="Statut du produit">
+              <select name="statut" value={form.statut} onChange={handleChange}>
                 {PRODUCT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>
 
-          <div className="form-row-2">
-            <div>
-              <label>Date d'achat</label>
-              <input name="dateAchat" type="date" value={form.dateAchat} onChange={handleChange} aria-label="Date d'achat" />
-            </div>
-            <div>
-              <label>Date de vente</label>
-              <input name="dateVente" type="date" value={form.dateVente} onChange={handleChange} placeholder="Si vendu" aria-label="Date de vente" />
-            </div>
+          <input name="description" value={form.description} onChange={handleChange} placeholder="Description courte" />
+          <input name="fournisseur" value={form.fournisseur} onChange={handleChange} placeholder="Fournisseur (optionnel)" />
+
+          <div className="form-actions">
+            <button type="submit" style={{flex: 1}}>{editingId ? '✔️ Enregistrer' : '➕ Ajouter'}</button>
+            <button type="button" className="secondary" onClick={resetForm} style={{flex: 1}}>Réinitialiser</button>
           </div>
-        </div>
-
-        <div className="form-section">
-          <h3>📦 Détails supplémentaires</h3>
-          <input name="fournisseur" value={form.fournisseur} onChange={handleChange} placeholder="Fournisseur (optionnel)" aria-label="Fournisseur" />
-          <input name="etat" value={form.etat} onChange={handleChange} placeholder="État (neuf, bon état...)" aria-label="État" />
-          <input name="emplacement" value={form.emplacement} onChange={handleChange} placeholder="Où c'est stocké (ex: étagère 2)" aria-label="Emplacement" />
-
-          <div className="file-row">
-            <input aria-label="Image produit" type="file" accept="image/*" onChange={handleImage} />
-            <input name="imageUrl" value={form.imageUrl} onChange={handleChange} placeholder="Ou coller URL image" />
-          </div>
-
-          <input name="tags" value={form.tags} onChange={handleChange} placeholder="Tags (optionnel, séparés par virgules)" aria-label="Tags" />
-          <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notes personnelles" rows={2} aria-label="Notes" />
-        </div>
-
-        <div className="form-section collapsible">
-          <button type="button" onClick={() => setShowAdvancedFees(!showAdvancedFees)} className="collapsible-btn">
-            {showAdvancedFees ? '▼' : '▶'} Frais détaillés (optionnel)
-          </button>
-          {showAdvancedFees && (
-            <div style={{marginTop: '10px'}}>
-              <p style={{fontSize: '12px', color: 'var(--muted)', marginBottom: '10px'}}>
-                Ajouter ici les frais supplémentaires pour calculer votre bénéfice réel
-              </p>
-              <div className="form-row-2">
-                <div>
-                  <label>Frais de port (€)</label>
-                  <input name="fraisPort" type="number" step="0.01" value={form.fraisPort} onChange={handleChange} placeholder="0.00" />
-                </div>
-                <div>
-                  <label>Commission plateforme (€)</label>
-                  <input name="commissionPlateforme" type="number" step="0.01" value={form.commissionPlateforme} onChange={handleChange} placeholder="Vinted, eBay..." />
-                </div>
-              </div>
-              <div className="form-row-2">
-                <div>
-                  <label>Frais emballage (€)</label>
-                  <input name="fraisEmballage" type="number" step="0.01" value={form.fraisEmballage} onChange={handleChange} placeholder="0.00" />
-                </div>
-                <div>
-                  <label>Autres frais (€)</label>
-                  <input name="fraisAnnexes" type="number" step="0.01" value={form.fraisAnnexes} onChange={handleChange} placeholder="0.00" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="form-actions">
-          <button type="submit">{editingId ? '✔️ Enregistrer' : '➕ Ajouter le produit'}</button>
-          <button type="button" className="alt" onClick={resetForm}>Réinitialiser</button>
         </div>
       </form>
 
+      {/* Simple Search & Filter */}
       <div className="toolbar">
-        <input className="search" aria-label="Recherche" placeholder="Recherche nom / SKU / catégorie / tags" value={search} onChange={e => setSearch(e.target.value)} />
-        
-        <button type="button" onClick={() => setAdvancedFiltersOpen(!advancedFiltersOpen)} style={{padding: '8px 12px', backgroundColor: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', marginRight: '10px'}}>
-          🔍 {advancedFiltersOpen ? 'Fermer filtres' : 'Filtres avancés'}
-        </button>
-
-        <div className="controls">
-          <div className="profile">
-            {user ? (
-              <div className="profile-info">
-                {user.photoURL ? <img src={user.photoURL} alt={user.name || user.email} className="thumb" style={{width:36,height:36,borderRadius:8}} /> : null}
-                <span style={{marginLeft:8}}>{user.name || user.email}</span>
-                <button className="small" onClick={handleSignOut} style={{marginLeft:8}}>Déconnexion</button>
-              </div>
-            ) : (
-              <div>
-                {authAvailable ? <button className="small" onClick={handleSignIn}>Se connecter (Google)</button> : (
-                  <button className="small" onClick={() => {
-                    const name = prompt('Nom du profil local (sera sauvegardé en local):');
-                    if (!name) return; const p = { name }; localStorage.setItem('local_profile', JSON.stringify(p)); setUser(p);
-                  }}>Créer profil local</button>
-                )}
-              </div>
-            )}
-          </div>
-          <div className="sku-settings">
-            <label>Préfixe SKU <input value={skuPrefix} onChange={e => setSkuPrefix(e.target.value.replace(/[^A-Za-z0-9]/g,'').toUpperCase())} style={{width:70}} /></label>
-            <label>Compteur <input type="number" value={skuCounter} onChange={e => setSkuCounter(Number(e.target.value)||1)} style={{width:90}} /></label>
-            <button type="button" className="small" onClick={() => { if(window.confirm('Réinitialiser le compteur SKU à 1 ?')) resetSkuCounter(1); }}>Reset SKU</button>
-          </div>
-          <select aria-label="Filtrer catégorie" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-            <option value="">Toutes catégories</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-
-          <select aria-label="Trier par" value={sortField} onChange={e => setSortField(e.target.value)}>
-            <option value="dateAchat">Date achat</option>
-            <option value="nom">Nom</option>
-            <option value="prixAchat">Prix achat</option>
-            <option value="prixVente">Prix vente</option>
-            <option value="beneficeUnitaire">Bénéfice/unité</option>
-          </select>
-
-          <select aria-label="Ordre" value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
-            <option value="desc">Desc</option>
-            <option value="asc">Asc</option>
-          </select>
-
-          <select aria-label="Taille page" value={pageSize} onChange={e => setPageSize(Number(e.target.value))}>
-            {PAGE_SIZES.map(s => <option key={s} value={s}>{s} / page</option>)}
-          </select>
-
-          <input ref={fileInputRef} aria-label="Importer CSV/JSON" type="file" accept=".csv,application/json" onChange={handleFileInput} />
-          <button onClick={() => exportAllJSON()}>Sauvegarder JSON</button>
-          <button onClick={() => exportSelectedCSV()}>Exporter sélection (CSV)</button>
-          <button onClick={() => bulkDelete()} className="danger">Supprimer sélection</button>
-          <button onClick={() => clearAll()} className="danger">Vider tout</button>
-          <button className="small" onClick={() => startScanner()}>Scanner</button>
-          <button className="small" onClick={() => setDarkMode(d => !d)}>{darkMode ? 'Mode clair' : 'Mode sombre'}</button>
-          <button className="small" onClick={() => setShowAll(s => !s)}>{showAll ? 'Masquer liste complète' : 'Voir toute la liste'}</button>
-        </div>
+        <input className="search" placeholder="🔍 Rechercher produit..." value={search} onChange={e => setSearch(e.target.value)} />
+        <select aria-label="Catégorie" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+          <option value="">Toutes catégories</option>
+          {categories.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select aria-label="Trier" value={sortField} onChange={e => setSortField(e.target.value)}>
+          <option value="dateAchat">Récents</option>
+          <option value="nom">Nom</option>
+          <option value="beneficeUnitaire">Meilleur profit</option>
+        </select>
       </div>
 
-      {/* Advanced Filters Section */}
-      {advancedFiltersOpen && (
-        <div style={{marginBottom: '20px', padding: '15px', backgroundColor: 'var(--card)', borderRadius: '8px', borderLeft: '4px solid var(--primary)'}}>
-          <h3 style={{marginTop: 0}}>Filtres avancés</h3>
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px'}}>
-            {/* Filter by Status */}
-            <div>
-              <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Statut</label>
-              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--muted)'}}>
-                <option value="">Tous les statuts</option>
-                {PRODUCT_STATUS.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-
-            {/* Filter by Supplier */}
-            <div>
-              <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Fournisseur</label>
-              <select value={filterSupplier} onChange={e => setFilterSupplier(e.target.value)} style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--muted)'}}>
-                <option value="">Tous les fournisseurs</option>
-                {[...new Set(produits.map(p => p.fournisseur).filter(Boolean))].map(f => <option key={f} value={f}>{f}</option>)}
-              </select>
-            </div>
-
-            {/* Filter by Category */}
-            <div>
-              <label style={{fontWeight: 'bold', display: 'block', marginBottom: '5px'}}>Catégorie</label>
-              <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} style={{width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--muted)'}}>
-                <option value="">Toutes les catégories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-
-            {/* Clear Filters */}
-            <div style={{display: 'flex', alignItems: 'flex-end'}}>
-              <button onClick={() => { setFilterStatus(''); setFilterSupplier(''); setFilterCategory(''); setSearch(''); }} style={{width: '100%', padding: '8px', backgroundColor: '#f44336', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
-                🔄 Réinitialiser filtres
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAll ? (
-        <div className="full-list">
-          <h2>Liste complète des articles</h2>
-          <div className="grid">
-            {sorted.map(p => (
-              <div key={p.id} className="produit-card large">
-                <div className="card-header">
-                  <div>
-                    <strong>{p.nom}</strong>
-                    <div className="meta">{p.sku} • {p.categorie} • <span style={{backgroundColor: STATUS_COLORS[p.statut] || '#ccc', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '12px'}}>{p.statut || 'Inconnu'}</span></div>
-                  </div>
-                  <div className="actions">
-                    <button onClick={() => setShowProductDetail(p.id)}>👁️</button>
-                    <button onClick={() => setShowQRModal(p.id)}>📱</button>
-                    <button onClick={() => editProduit(p.id)}>✏️</button>
-                    <button onClick={() => deleteProduit(p.id)}>🗑️</button>
-                  </div>
-                </div>
-                {p.imageUrl ? <img src={p.imageUrl} alt={p.nom} className="thumb" /> : null}
-                <p>{p.description}</p>
-                {(() => {
-                  const prof = calculateProfit(p);
-                  return <p>Qty: {p.quantite} — Achat: €{p.prixAchat} — Vente: €{p.prixVente} — Profit: €{prof.netProfit.toFixed(2)} ({prof.roiPercentage}% ROI)</p>;
-                })()}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="liste-produits">
+      {/* Products List */}
+      <div className="liste-produits">
           {scannerActive ? (
             <div className="scanner-modal">
               <div className="scanner-inner">
@@ -1382,47 +1149,44 @@ function App() {
               </div>
             </div>
           ) : null}
-        <div className="list-controls">
-          <label><input type="checkbox" onChange={() => selectAllOnPage(paginated)} /> Sélectionner la page</label>
-          <div className="pager">
-            <button disabled={page<=1} onClick={() => setPage(p => Math.max(1,p-1))}>◀</button>
-            <span>Page {page}/{totalPages}</span>
-            <button disabled={page>=totalPages} onClick={() => setPage(p => Math.min(totalPages,p+1))}>▶</button>
+        {filtered.length === 0 ? (
+          <div style={{textAlign: 'center', padding: '20px', color: 'var(--muted)'}}>
+            Aucun produit trouvé
           </div>
-        </div>
-
-        {paginated.map((p) => (
-          <div key={p.id} className="produit-card">
-            <div className="card-header">
-              <div>
-                <label className="select-checkbox"><input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} aria-label={`Sélection ${p.nom}`} /> {p.nom} {p.sku ? `— ${p.sku}` : ''}</label>
-                <div className="meta">{p.categorie} • {p.fournisseur} • <span style={{backgroundColor: STATUS_COLORS[p.statut] || '#ccc', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '12px'}}>{p.statut || 'Inconnu'}</span></div>
-              </div>
-              <div className="actions">
-                <button onClick={() => setShowProductDetail(p.id)} aria-label={`Détails de ${p.nom}`}>👁️</button>
-                <button onClick={() => setShowQRModal(p.id)} aria-label={`QR de ${p.nom}`}>📱</button>
-                <button onClick={() => editProduit(p.id)} aria-label={`Éditer ${p.nom}`}>✏️</button>
-                <button onClick={() => deleteProduit(p.id)} aria-label={`Supprimer ${p.nom}`}>🗑️</button>
-              </div>
-            </div>
-
-            {p.imageUrl ? <img src={p.imageUrl} alt={p.nom} className="thumb" /> : null}
-
-            {(() => {
-              const prof = calculateProfit(p);
-              return (
-                <>
-                  <p>Qty: {p.quantite} — Achat: €{p.prixAchat} — Vente: €{p.prixVente} — Frais: €{p.frais}</p>
-                  <p className="benefice">Profit: €{prof.netProfit.toFixed(2)} ({prof.roiPercentage}% ROI)</p>
-                </>
-              );
-            })()}
-            {p.description ? <p className="description">{p.description}</p> : null}
-            {p.notes ? <p className="notes">Notes: {p.notes}</p> : null}
-          </div>
-        ))}
+        ) : (
+          <table style={{width: '100%', borderCollapse: 'collapse', marginTop: '20px'}}>
+            <thead>
+              <tr style={{borderBottom: '2px solid var(--primary)'}}>
+                <th style={{textAlign: 'left', padding: '12px', fontSize: '14px', fontWeight: 'bold'}}>Produit</th>
+                <th style={{textAlign: 'center', padding: '12px', fontSize: '14px', fontWeight: 'bold'}}>Catégorie</th>
+                <th style={{textAlign: 'right', padding: '12px', fontSize: '14px', fontWeight: 'bold'}}>Prix achat</th>
+                <th style={{textAlign: 'right', padding: '12px', fontSize: '14px', fontWeight: 'bold'}}>Prix vente</th>
+                <th style={{textAlign: 'center', padding: '12px', fontSize: '14px', fontWeight: 'bold'}}>Statut</th>
+                <th style={{textAlign: 'center', padding: '12px', fontSize: '14px', fontWeight: 'bold'}}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map(p => (
+                <tr key={p.id} style={{borderBottom: '1px solid var(--card)', backgroundColor: 'var(--hover)'}}>
+                  <td style={{padding: '12px', fontWeight: '500'}}>{p.nom}</td>
+                  <td style={{textAlign: 'center', padding: '12px', fontSize: '13px', color: 'var(--muted)'}}>{p.categorie || '—'}</td>
+                  <td style={{textAlign: 'right', padding: '12px', fontSize: '13px'}}>€{(parseFloat(p.prixAchat) || 0).toFixed(2)}</td>
+                  <td style={{textAlign: 'right', padding: '12px', fontSize: '13px', fontWeight: 'bold', color: '#4caf50'}}>€{(parseFloat(p.prixVente) || 0).toFixed(2)}</td>
+                  <td style={{textAlign: 'center', padding: '12px'}}>
+                    <span style={{backgroundColor: STATUS_COLORS[p.statut] || '#999', color: 'white', padding: '4px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold'}}>
+                      {p.statut || 'Inconnu'}
+                    </span>
+                  </td>
+                  <td style={{textAlign: 'center', padding: '12px', display: 'flex', gap: '8px', justifyContent: 'center'}}>
+                    <button onClick={() => editProduit(p.id)} style={{backgroundColor: 'var(--primary)', color: 'white', padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px'}}>✏️ Éditer</button>
+                    <button onClick={() => deleteProduit(p.id)} style={{backgroundColor: '#f44336', color: 'white', padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px'}}>🗑️ Supprimer</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
-      )}
       </div>
       )}
 
@@ -1822,6 +1586,8 @@ function App() {
         <div>Stock value: € {produits.reduce((acc,p)=>acc + ((p.prixAchat||0)*(p.quantite||1)),0).toFixed(2)}</div>
         <div>Potential revenue: € {produits.reduce((acc,p)=>acc + ((p.prixVente||0)*(p.quantite||1)),0).toFixed(2)}</div>
         <div>Total profit: € {produits.filter(p => p.statut === 'Vendu').reduce((acc,p)=>acc + calculateProfit(p).netProfit,0).toFixed(2)}</div>
+      </div>
+        </div>
       </div>
     </div>
     </>
