@@ -4,13 +4,13 @@
   "private": true,
   "dependencies": {
     "chart.js": "^4.5.1",
-    "firebase": "^10.0.0",
+    "firebase": "^12.9.0",
     "qrcode.react": "^4.2.0",
-    "react": "^18.0.0",
+    "react": "^19.2.4",
     "react-chartjs-2": "^5.3.1",
-    "react-dom": "^18.0.0",
-    "react-scripts": "5.0.1",
-    "web-vitals": "^2.1.0"
+    "react-dom": "^19.2.4",
+    "react-scripts": "^5.0.1",
+    "web-vitals": "^5.1.0"
   },
   "main": "public/electron.js",
   "homepage": "./",
@@ -42,11 +42,11 @@
     ]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
     "electron-is-dev": "^3.0.1",
-    "wait-on": "^7.2.0"
+    "wait-on": "^9.0.3"
   },
   "build": {
     "appId": "com.app-achatrevente.app",
