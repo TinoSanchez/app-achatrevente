@@ -55,15 +55,6 @@ function saveLocalUsers(users) {
   }
 }
 
-function getLocalSession() {
-  try {
-    const session = localStorage.getItem(LOCAL_SESSION_KEY);
-    return session ? JSON.parse(session) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
 function setLocalSession(user) {
   try {
     if (user) {
@@ -144,9 +135,9 @@ function signOutUserLocal() {
 }
 
 function onAuthChangeLocal(cb) {
-  // Call immediately with current session
-  const session = getLocalSession();
-  cb(session);
+  // When Firebase is not available, always return null to force login
+  // Even if there's a stored session, we don't auto-connect
+  cb(null);
   
   // Return cleanup function
   return () => {};
