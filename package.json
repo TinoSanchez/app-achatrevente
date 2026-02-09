@@ -12,7 +12,8 @@
     "react-parallax": "^3.5.2",
     "react-tsparticles": "^2.12.2",
     "tsparticles": "^3.9.1",
-    "web-vitals": "^5.1.0"
+    "web-vitals": "^5.1.0",
+    "electron-is-dev": "^3.0.1"
   },
   "main": "public/electron.js",
   "homepage": "./",
@@ -47,7 +48,6 @@
     "concurrently": "^9.2.1",
     "electron": "^40.2.1",
     "electron-builder": "^26.7.0",
-    "electron-is-dev": "^3.0.1",
     "react-scripts": "^5.0.1",
     "wait-on": "^9.0.3"
   },

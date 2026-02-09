@@ -82,6 +82,25 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 function App() {
+  // Background images
+  const wallpapers = [
+    '',
+    'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1465101046530-73398c7f1b58?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1465101178521-c1f9c7e7b2b9?auto=format&fit=crop&w=1200&q=80'
+  ];
+  const [wallpaper, setWallpaper] = useState(() => localStorage.getItem('wallpaper') || '');
+
+  // Theme logic
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || (darkMode ? 'dark' : 'light'));
+  useEffect(() => {
+    document.body.classList.toggle('theme-dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+  useEffect(() => {
+    localStorage.setItem('wallpaper', wallpaper);
+  }, [wallpaper]);
     // Chart data for monthly revenue
     const getMonthlyChartData = () => {
       // Regroupe les profits par mois (YYYY-MM)
@@ -159,7 +178,7 @@ function App() {
   const [page, setPage] = useState(1);
   const fileInputRef = useRef(null);
   const [showAll, setShowAll] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === '1');
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('dark_mode') === '1'); // legacy, now use theme
   const [scannerActive, setScannerActive] = useState(false);
   const videoRef = useRef(null);
   const [scanMessage, setScanMessage] = useState('');
@@ -324,10 +343,7 @@ function App() {
     localStorage.setItem('produits_v2', JSON.stringify(produits));
   }, [produits]);
 
-  useEffect(() => {
-    localStorage.setItem('dark_mode', darkMode ? '1' : '0');
-    document.body.classList.toggle('dark', darkMode);
-  }, [darkMode]);
+  // Remove old dark mode toggle
 
   useEffect(() => { localStorage.setItem('sku_prefix', skuPrefix); }, [skuPrefix]);
   useEffect(() => { localStorage.setItem('sku_counter', String(skuCounter)); }, [skuCounter]);
@@ -854,33 +870,47 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {/* Header with User Profile */}
-      <div className="app-header">
-        <div className="header-left">
-          <h1>📦 App Achat Revente</h1>
-        </div>
-        <div className="header-right">
-          {user && (
-            <div className="user-profile">
-              {user.photoURL && <img src={user.photoURL} alt="Avatar" className="user-avatar" />}
-              <div className="user-info">
-                <span className="user-name">{user.displayName || user.email}</span>
-                {user.isLocal && <span className="mode-badge">Mode Offline</span>}
-                {userRole === 'admin' && <span className="mode-badge" style={{backgroundColor: '#ff9800'}}>👨‍💼 ADMIN</span>}
-              </div>
-              {userRole === 'admin' && (
-                <button onClick={() => setShowAdmin(true)} style={{marginRight: '10px', padding: '8px 15px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
-                  👨‍💼 Admin
-                </button>
-              )}
-              <button onClick={handleLogout} className="btn-logout">
-                <span>🚪</span> Déconnexion
+    <>
+      {wallpaper && <div className="bg-wallpaper" style={{backgroundImage: `url('${wallpaper}')`}}></div>}
+      <div className="App">
+        {/* Header with User Profile and theme/wallpaper controls */}
+        <div className="app-header">
+          <div className="header-left">
+            <h1>📦 App Achat Revente</h1>
+          </div>
+          <div className="header-right">
+            <div style={{display:'flex',alignItems:'center',gap:'18px'}}>
+              <button onClick={()=>setTheme(theme==='dark'?'light':'dark')} style={{background:theme==='dark'?'#22223b':'#fff',color:theme==='dark'?'#fff':'#222',border:'1.5px solid var(--muted)',borderRadius:'8px',padding:'8px 18px',fontWeight:'bold',boxShadow:'0 2px 8px 0 rgba(0,0,0,0.08)',cursor:'pointer'}}>
+                {theme==='dark'? '☀️ Thème clair' : '🌙 Thème sombre'}
               </button>
+              <select value={wallpaper} onChange={e=>setWallpaper(e.target.value)} style={{border:'1.5px solid var(--muted)',borderRadius:'8px',padding:'8px 18px',fontWeight:'bold',background:'#fff',color:'#222',boxShadow:'0 2px 8px 0 rgba(0,0,0,0.08)',cursor:'pointer'}}>
+                <option value="">Fond d'écran (aucun)</option>
+                <option value={wallpapers[1]}>Nature 1</option>
+                <option value={wallpapers[2]}>Nature 2</option>
+                <option value={wallpapers[3]}>Nature 3</option>
+                <option value={wallpapers[4]}>Nature 4</option>
+              </select>
             </div>
-          )}
+            {user && (
+              <div className="user-profile">
+                {user.photoURL && <img src={user.photoURL} alt="Avatar" className="user-avatar" />}
+                <div className="user-info">
+                  <span className="user-name">{user.displayName || user.email}</span>
+                  {user.isLocal && <span className="mode-badge">Mode Offline</span>}
+                  {userRole === 'admin' && <span className="mode-badge" style={{backgroundColor: '#ff9800'}}>👨‍💼 ADMIN</span>}
+                </div>
+                {userRole === 'admin' && (
+                  <button onClick={() => setShowAdmin(true)} style={{marginRight: '10px', padding: '8px 15px', backgroundColor: '#ff9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'}}>
+                    👨‍💼 Admin
+                  </button>
+                )}
+                <button onClick={handleLogout} className="btn-logout">
+                  <span>🚪</span> Déconnexion
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
       <p style={{textAlign: 'center', color: 'var(--muted)', marginTop: '-15px', marginBottom: '20px', fontSize: '14px'}}>
         Gestion simple et intuitive de vos achats et reventes
