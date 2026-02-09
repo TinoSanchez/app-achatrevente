@@ -7,7 +7,7 @@ import { collection, addDoc, setDoc, doc, deleteDoc, onSnapshot, query, orderBy 
 import { Line, Bar } from 'react-chartjs-2';
 import { QRCodeSVG } from 'qrcode.react';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
-import { onUserProductsChange, addProductForUser, updateProductForUser, deleteProductForUser, saveUserPreferences, getUserPreferences } from './productService';
+import { onUserProductsChange, saveUserPreferences, getUserPreferences } from './productService';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -85,7 +85,7 @@ function App() {
   // État d'authentification
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [loginError, setLoginError] = useState('');
+  // const [loginError, setLoginError] = useState('');
 
   // États des produits
   const [produits, setProduits] = useState(() => {
@@ -240,7 +240,7 @@ function App() {
       setProduits([]);
       resetForm();
     } catch (error) {
-      setLoginError('Erreur lors de la déconnexion');
+      // Erreur lors de la déconnexion (plus de setLoginError)
       console.error('Logout error:', error);
     }
   };
