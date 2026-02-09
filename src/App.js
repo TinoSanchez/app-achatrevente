@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Particles from 'react-tsparticles';
-import { Parallax } from 'react-parallax';
 import './modern.css';
 import Login from './Login';
 import Admin from './Admin';
@@ -112,25 +110,6 @@ function App() {
       };
     };
   // Particles config
-  const particlesOptions = {
-    background: { color: { value: 'transparent' } },
-    fpsLimit: 60,
-    interactivity: {
-      events: { onClick: { enable: true, mode: 'push' }, onHover: { enable: true, mode: 'repulse' }, resize: true },
-      modes: { push: { quantity: 4 }, repulse: { distance: 120, duration: 0.4 } }
-    },
-    particles: {
-      color: { value: '#0f62fe' },
-      links: { color: '#0f62fe', distance: 180, enable: true, opacity: 0.3, width: 1.2 },
-      collisions: { enable: false },
-      move: { direction: 'none', enable: true, outModes: { default: 'bounce' }, random: false, speed: 1.2, straight: false },
-      number: { density: { enable: true, area: 900 }, value: 60 },
-      opacity: { value: 0.5 },
-      shape: { type: 'circle' },
-      size: { value: { min: 1, max: 5 } }
-    },
-    detectRetina: true
-  };
   // État d'authentification
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
